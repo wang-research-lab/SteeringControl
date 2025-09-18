@@ -1,0 +1,41 @@
+extends: ../models/default.yaml
+name: explicit_bias
+
+train_data:
+  pos:
+    class: data.bias.ToxiGen
+    params:
+      n: 0.2
+      format_mode: FormatMode.TRAIN
+  neg: null
+  neutral: null
+
+validation_data:
+  - class: data.bias.ToxiGen
+    params:
+      n: 0.2
+      format_mode: FormatMode.VALIDATION
+
+harmless_validation_data:
+  - class: data.refusal.Alpaca
+    params:
+      n: 0.2
+      format_mode: FormatMode.VALIDATION
+
+test_data:
+  - class: data.bias.ToxiGen
+    params:
+      n: 0.2
+      format_mode: FormatMode.TEST
+
+# Our direction represents correctness (unbiasedness). We want to increase correctness.
+steering_direction: "increase"
+
+# Multiple choice evaluation method: "likelihood" (default) or "substring"
+# mc_evaluation_method: "likelihood"  # Default, so no need to specify
+
+inference:
+  max_new_tokens: 1
+  temperature: 0.0
+  repetition_penalty: 1.0
+  batch_size: 32

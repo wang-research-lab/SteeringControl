@@ -1,0 +1,72 @@
+extends: ../models/default.yaml
+name: hallucination_intrinsic
+
+train_data:
+  - pos:
+      class: data.hallucination.FaithEvalUnanswerable
+      params:
+        n: 0.2
+        format_mode: FormatMode.TRAIN
+    neg: null
+    neutral: null
+  - pos:
+      class: data.hallucination.FaithEvalInconsistent
+      params:
+        n: 0.2
+        format_mode: FormatMode.TRAIN
+    neg: null
+    neutral: null
+  - pos:
+      class: data.hallucination.FaithEvalCounterfactual
+      params:
+        n: 0.2
+        format_mode: FormatMode.TRAIN
+    neg: null
+    neutral: null
+
+validation_data:
+  - class: data.hallucination.FaithEvalUnanswerable
+    params:
+      n: 0.2
+      format_mode: FormatMode.VALIDATION
+  - class: data.hallucination.FaithEvalInconsistent
+    params:
+      n: 0.2
+      format_mode: FormatMode.VALIDATION
+  - class: data.hallucination.FaithEvalCounterfactual
+    params:
+      n: 0.2
+      format_mode: FormatMode.VALIDATION
+
+harmless_validation_data:
+  - class: data.refusal.Alpaca
+    params:
+      n: 0.2
+      format_mode: FormatMode.VALIDATION
+
+test_data:
+  - class: data.hallucination.FaithEvalUnanswerable
+    params:
+      n: 0.2
+      format_mode: FormatMode.TEST
+  - class: data.hallucination.FaithEvalInconsistent
+    params:
+      n: 0.2
+      format_mode: FormatMode.TEST
+  - class: data.hallucination.FaithEvalCounterfactual
+    params:
+      n: 0.2
+      format_mode: FormatMode.TEST
+
+# Our direction represents correctness (no hallucination). We want to increase correctness.
+steering_direction: "increase"
+
+# Multiple choice evaluation method: "likelihood" (default) or "substring"
+# mc_evaluation_method: "likelihood"  # Default, so no need to specify
+
+inference:
+  max_new_tokens: 64
+  temperature: 0.0
+  repetition_penalty: 1.0
+  # batch_size: 4  # on A100s (qwen for all but ACE) lower batch size bc long context
+  batch_size: 1  # on all else

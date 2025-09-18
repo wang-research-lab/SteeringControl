@@ -1,0 +1,51 @@
+# PCA method configuration only: define generation & selection settings.
+# This YAML should be merged with a model and concept config to run an experiment.
+# This is a more general PCA following AxBench with generation pos of ALL (I think this is shared with CAST too) and only applied at one layer like CAA (as opposed to in CAST where it is cumulative).
+
+direction_generation:
+  generator:
+    class: direction_generation.linear.PCA
+    params: {}
+  param_grid:
+    # Sweep layers from 25% to 80% of total layers, step size 2
+    layer_pct_start: [0.25]
+    layer_pct_end:   [0.8]
+    layer_step:      [2]
+    # No component filtering: None implies default outputs
+    component:       [null]
+    attr:            ['input']
+    # Use token index -1 for generation
+    pos:             [-1]
+
+direction_selection:
+  class: direction_selection.grid_search.GridSearchSelector
+  params:
+    # No explicit application locations; uses generation location by default
+    application_locations: []
+    include_generation_loc: true
+    # Apply steering cumulatively across all layers up to the target layer
+    # cumulative_layers: true
+    generation_pos: ALL
+    # Steering strength multipliers to sweep
+    factors: [-3.0, -2.0, -1.0, 1.0, 2.0, 3.0]
+    # KL divergence filtering
+    use_kl_divergence_check: false
+    # kl_threshold: 0.1
+
+direction_application:
+  class: direction_application.unconditional.ActAdd
+  params: {}
+
+# Conditional steering configuration
+conditional:
+  enabled: true
+  condition_selection:
+    class: direction_selection.grid_search.ConditionalGridSearchSelector
+    params:
+      # condition_thresholds: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+      condition_thresholds: "auto"  # Automatically create thresholds based on min/max of similarity data.
+      condition_comparators: ["greater", "less"]
+      condition_threshold_comparison_mode: "last"
+      result_path: "conditional_grid_search_results.csv"
+  # Use same directions as behavior for condition (behavior vector == steering vector)
+  use_behavior_directions_for_condition: true

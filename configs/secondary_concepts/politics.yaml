@@ -1,0 +1,14 @@
+test_data:
+  - class: data.secondary_datasets.Twinviews
+    params:
+      n: 750
+      format_mode: FormatMode.TEST
+
+# Multiple choice evaluation method: "likelihood" (default) or "substring"
+# mc_evaluation_method: "likelihood"  # Default, so no need to specify
+
+inference:
+  max_new_tokens: 1
+  temperature: 0.0
+  repetition_penalty: 1.0
+  batch_size: 32

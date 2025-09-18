@@ -1,0 +1,45 @@
+extends: ../models/default.yaml
+name: refusal
+
+train_data:
+  pos:
+    class: data.refusal.SaladBench
+    params:
+      n: 0.2
+      format_mode: FormatMode.TRAIN
+  neg:
+    class: data.refusal.Alpaca
+    params:
+      n: 0.2
+      format_mode: FormatMode.TRAIN
+  neutral: null
+
+validation_data:
+  - class: data.refusal.SaladBench
+    params:
+      n: 0.2
+      format_mode: FormatMode.VALIDATION
+
+neg_validation_data:
+  - class: data.refusal.Alpaca
+    params:
+      n: 0.2
+      format_mode: FormatMode.VALIDATION
+
+test_data:
+  - class: data.refusal.SaladBench
+    params:
+      n: 0.2
+      format_mode: FormatMode.TEST
+
+# Our direction represents refusal. We want to decrease refusal to jailbreak the model (more interesting than inducing refusal).
+steering_direction: "decrease"
+
+# Use neg_validation_data (Alpaca) as harmless data for KL divergence checking
+use_neg_validation_as_harmless: true
+
+inference:
+  max_new_tokens: 64
+  temperature: 0.0
+  repetition_penalty: 1.0
+  batch_size: 8  # Number of examples to process in each batch

@@ -1,0 +1,45 @@
+# CAA method configuration only: define generation & selection settings.
+# This YAML should be merged with a model and concept config to run an experiment.
+
+# First, override the dataset formatting to use CAA templates:
+train_data:
+  pos:
+    params:
+      format: SteeringFormat.CAA
+  neg:
+    params:
+      format: SteeringFormat.CAA
+  neutral: null
+
+direction_generation:
+  generator:
+    class: direction_generation.linear.DiffInMeans
+    params: {}
+  param_grid:
+    # Sweep layers from 25% to 80% of total layers, step size 2
+    layer_pct_start: [0.25]
+    layer_pct_end:   [0.8]
+    layer_step:      [2]
+    # No component filtering: None implies default outputs
+    component:       [null]
+    attr:            ['input']
+    # Use token index -1 for generation
+    pos:             [-1]
+
+direction_selection:
+  class: direction_selection.grid_search.GridSearchSelector
+  params:
+    # No explicit application locations; uses generation location by default
+    application_locations: []
+    include_generation_loc: true
+    generation_pos: POST_INSTRUCTION
+    # Steering strength multipliers to sweep
+    factors: [-3.0, -2.0, -1.0, 1.0, 2.0, 3.0]
+    # KL divergence filtering
+    use_kl_divergence_check: true
+    kl_threshold: 0.1
+
+direction_application:
+  # class: direction_application.unconditional.DirectionalAblation  
+  class: direction_application.unconditional.ActAdd
+  params: {}

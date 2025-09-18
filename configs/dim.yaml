@@ -1,0 +1,48 @@
+# DIM method configuration only: define generation & selection settings.
+# This YAML should be merged with a model and concept config to run an experiment.
+
+# First, override the dataset formatting to use CAA templates:
+train_data:
+  pos:
+    params:
+      format: SteeringFormat.ARDITI
+  neg:
+    params:
+      format: SteeringFormat.ARDITI
+  neutral: null
+
+direction_generation:
+  generator:
+    class: direction_generation.linear.DiffInMeans
+    params: {}
+  param_grid:
+    # Sweep layers from 25% to 80% of total layers, step size 2
+    layer_pct_start: [0.25]
+    layer_pct_end:   [0.8]
+    layer_step:      [2]
+    # No component filtering: the directions are generated [using the input of each layer](https://github.com/andyrdt/refusal_direction/blob/main/pipeline/submodules/generate_directions.py#L29C5-L29C184)
+    component:       [null]
+    attr:            ['input']
+    # Use token index -1 for generation. Arditi uses -5 .. -1 but that is only applicable for unpaired data consisting of instructions. For our dataset, I think it's fine here to just fix at -1; it was seen as the best idx for most of the models anyway in Table 5 of Arditi.
+    pos:             [-1]  # [-5, -4, -3, -2, -1]
+    # The direction should be unit norm'd. Note this is default. We don't yet have a toggle for on vs. off.
+    # get_unit_norm: true
+
+direction_selection:
+  class: direction_selection.grid_search.GridSearchSelector
+  params:
+    application_locations:
+      - layer: all
+        component: ['attn', 'mlp', null]  # For directional ablation, need to apply everywhere the model writes to the residual stream. So, this includes for every layer the output of the attn and the output of the mlp. It also includes the input of every layer, starting at layer 0 (right after the embedding matrix).
+        attr: ['output', 'output', 'input']
+        component_attr_paired: true  # whether we take the component at only the specified attr of the corresp index. For example, if true we will take the output of attn, the output of mlp, then input of null (which as you know corresponds to the input of the layer as a whole). If false, let's say component is 'attn' and attr is ['output', 'input']. Then we will take attn at both output and input.
+        pos: ALL
+    # Steering strength multipliers to sweep -- none for ablation.
+    factors: null
+    # KL divergence filtering
+    use_kl_divergence_check: true
+    kl_threshold: 0.1
+
+direction_application:
+  class: direction_application.unconditional.DirectionalAblation
+  params: {}

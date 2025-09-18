@@ -1,0 +1,11 @@
+test_data:
+  - class: data.secondary_datasets.GSM8K
+    params:
+      n: 500
+      format_mode: FormatMode.TEST
+
+inference:
+  max_new_tokens: 400
+  temperature: 0.0
+  repetition_penalty: 1.0
+  batch_size: 4

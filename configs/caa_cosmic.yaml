@@ -1,0 +1,68 @@
+# CAA + COSMIC method configuration: CAA data formatting with COSMIC direction selection
+# Combines CAA's data formatting with COSMIC's automated direction selection using cosine similarity metrics.
+# This YAML should be merged with a model and concept config to run an experiment.
+
+# Training data configuration - use CAA formatting
+train_data:
+  pos:
+    params:
+      format: SteeringFormat.CAA
+  neg:
+    params:
+      format: SteeringFormat.CAA
+  neutral: null
+
+# Direction generation configuration
+direction_generation:
+  generator:
+    # Use difference in means for generating candidate directions (same as CAA)
+    class: direction_generation.linear.DiffInMeans
+    params: {}
+  param_grid:
+    # Generate directions across multiple layers for COSMIC evaluation
+    # Sweep layers from 25% to 80% of total layers, step size 2 (same as CAA)
+    layer_pct_start: [0.25]
+    layer_pct_end:   [0.8]
+    layer_step:      [2]
+    # Use layer outputs for direction generation (same as CAA)
+    component:       [null]  # No component filtering: None implies default outputs
+    attr:            ['output']
+    # Use last token position (-1) for activation extraction (same as CAA)
+    pos:             [-1]
+
+# Direction selection configuration - the core difference: use COSMIC instead of grid search
+direction_selection:
+  class: direction_selection.cosmic.CosmicSelector
+  params:
+    # No explicit application locations; uses generation location by default (same as CAA)
+    application_locations: []
+    # Include generation location by default (same as CAA)
+    include_generation_loc: true
+    generation_pos: POST_INSTRUCTION
+    # Like grid search, iterates over a range of steering factors
+    factors: [-3.0, -2.0, -1.0, 1.0, 2.0, 3.0]
+    # Additional params required by COSMIC (same signature as GridSearchSelector)
+    result_path: "caa_cosmic_results.csv"
+    cumulative_layers: false
+    # COSMIC-specific parameters
+    layer_selection_pct: 0.1  # 10% of layers with lowest cosine similarity
+    kl_threshold: 0.1         # KL divergence threshold for filtering directions
+    # Specify different appliers for positive and negative interventions
+    positive_applier:
+      class: direction_application.unconditional.ActAdd
+      params: {}
+    negative_applier:
+      class: direction_application.unconditional.DirectionalAblation  
+      params: {}
+# Direction application method (same as CAA)
+direction_application:
+  # class: direction_application.unconditional.DirectionalAblation  
+  class: direction_application.unconditional.ActAdd
+  params: {}
+
+# Notes:
+# - Uses CAA data formatting (SteeringFormat.CAA) for training data
+# - Generates candidate directions using the same approach as CAA
+# - Applies COSMIC automated layer selection instead of grid search
+# - Uses POST_INSTRUCTION position for interventions (same as CAA)
+# - COSMIC automatically handles coefficient selection (+1.0/-1.0) for concept inversion

@@ -1,0 +1,65 @@
+# DIM COSMIC configuration with PyTorch hooks support and separate application locations
+# This YAML should be merged with a model and concept config to run an experiment.
+
+# First, override the dataset formatting to use CAA templates:
+train_data:
+  pos:
+    params:
+      format: SteeringFormat.ARDITI
+  neg:
+    params:
+      format: SteeringFormat.ARDITI
+  neutral: null
+
+direction_generation:
+  generator:
+    class: direction_generation.linear.DiffInMeans
+    params: {}
+  param_grid:
+    # Sweep layers from 25% to 80% of total layers, step size 2
+    layer_pct_start: [0.25]
+    layer_pct_end:   [0.8]
+    layer_step:      [2]
+    # No component filtering: the directions are generated [using the input of each layer](https://github.com/andyrdt/refusal_direction/blob/main/pipeline/submodules/generate_directions.py#L29C5-L29C184)
+    component:       [null]
+    attr:            ['input']
+    # Use token index -1 for generation. Arditi uses -5 .. -1 but that is only applicable for unpaired data consisting of instructions. For our dataset, I think it's fine here to just fix at -1; it was seen as the best idx for most of the models anyway in Table 5 of Arditi.
+    pos:             [-1]  # [-5, -4, -3, -2, -1]
+    # The direction should be unit norm'd. Note this is default. We don't yet have a toggle for on vs. off.
+    # get_unit_norm: true
+
+direction_selection:
+  class: direction_selection.cosmic.CosmicSelector
+  params:
+    # Default application locations (fallback if positive/negative not specified)
+    application_locations:
+      - layer: all
+        component: ['attn', 'mlp', null]  # For directional ablation, need to apply everywhere the model writes to the residual stream
+        attr: ['output', 'output', 'input']
+        component_attr_paired: true
+        pos: ALL
+    factors: null
+    # Additional params required by COSMIC (same signature as GridSearchSelector)
+    result_path: "dim_cosmic_results.csv"
+    # COSMIC-specific parameters
+    layer_selection_pct: 0.1  # 10% of layers with lowest cosine similarity
+    kl_threshold: 0.1         # KL divergence threshold for filtering directions
+    # COSMIC dual applier setup:
+    # POSITIVE applier/locations = defaults to direction_application and application_locations (for final inference)
+    # NEGATIVE applier/locations = specified below (for COSMIC scoring only)
+    
+    # Optional: positive_applier would default to direction_application (DirectionalAblation)
+    # Optional: positive_application_locations would default to application_locations above
+    
+    # NEGATIVE applier for COSMIC scoring (simpler intervention)
+    negative_applier:
+      class: direction_application.unconditional.ActAdd
+      params: {}
+    # NEGATIVE locations for COSMIC scoring (use generation location)
+    negative_application_locations:
+      - include_generation_loc: true
+        generation_pos: ALL
+
+direction_application:
+  class: direction_application.unconditional.DirectionalAblation
+  params: {}
