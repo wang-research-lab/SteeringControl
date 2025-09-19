@@ -268,6 +268,31 @@ Our evaluation reveals several critical insights about current steering methods:
 }
 ```
 
+## 📄 License
+
+### Framework Code
+The SteeringControl framework code is released under the **MIT License**.
+
+### Datasets
+This benchmark incorporates multiple existing datasets, each with their own licensing terms. For some datasets (e.g., HalluLens), we also utilize their evaluation code and metrics. Users must respect the individual licenses of constituent datasets:
+
+| Dataset | License | Source |
+|---------|---------|--------|
+| **ARC-C** | CC-BY-SA-4.0 | [AllenAI](https://huggingface.co/datasets/allenai/ai2_arc) |
+| **Alpaca** | CC-BY-NC-4.0 | [Stanford](https://huggingface.co/datasets/tatsu-lab/alpaca) |
+| **BBQ** | CC-BY-4.0 | [NYU-MLL](https://github.com/nyu-mll/BBQ) |
+| **CMTest** | CC-BY-SA-4.0 | [AI-Secure](https://huggingface.co/datasets/AI-Secure/DecodingTrust) |
+| **DarkBench** | MIT | [Apart Research](https://huggingface.co/datasets/apart/darkbench) |
+| **FaithEval** | See source* | [Salesforce](https://github.com/SalesforceAIResearch/FaithEval) |
+| **GPQA** | CC-BY-4.0 | [Rein et al.](https://huggingface.co/datasets/Idavidrein/gpqa) |
+| **HalluLens** | CC-BY-NC** | [Meta](https://github.com/facebookresearch/HalluLens) |
+| **SALADBench** | Apache-2.0 | [OpenSafetyLab](https://github.com/OpenSafetyLab/SALAD-BENCH) |
+| **ToxiGen** | See source* | [Microsoft](https://github.com/microsoft/TOXIGEN) |
+| **TruthfulQA** | See source* | [Lin et al.](https://github.com/sylinrl/TruthfulQA) |
+| **TwinViews** | CC-BY-4.0 | [Fulay et al.](https://huggingface.co/datasets/wwbrannon/twinviews-13k) |
+
+*Datasets marked with asterisk seem to have no explicit dataset license but their associated codebases are licensed (Apache-2.0, MIT, etc.). Please refer to original sources for usage terms. HalluLens is mostly CC-BY-NC but contains some components with other licenses.*
+
 ## 🙏 Acknowledgments
 
 We gratefully acknowledge the following for helpful resources and foundational work:
