@@ -12,6 +12,7 @@ configs/models-old/
 cosmic_format
 post_neurips_experiments
 *mechinterp_workshop_experiments
+*experiments
 requirements.txt
 data/splits/
 messy-old-tests/

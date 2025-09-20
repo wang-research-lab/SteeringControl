@@ -12,6 +12,9 @@ import importlib
 import glob
 import asyncio
 
+# Get script root directory for config and experiment paths
+script_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from utils.steering_utils import CandidateDirection
 from direction_application.base import InterventionType
 from utils.enums import DEFAULT_MC_METHOD

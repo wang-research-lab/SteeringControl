@@ -656,7 +656,7 @@ if __name__ == "__main__":
     
     if len(sys.argv) != 2:
         print("Usage: python generate_all_plots.py <experiments_dir>")
-        print("Example: python generate_all_plots.py mechinterp_workshop_experiments/")
+        print("Example: python generate_all_plots.py experiments/")
         sys.exit(1)
     
     experiments_dir = sys.argv[1]

@@ -66,7 +66,7 @@ def _validate_selector_config(sel_spec: dict, cfg: dict):
 
 
 
-def main(config_path: str, save_intermediates: bool = False, output_dir: str = None, experiments_dir: str = 'mechinterp_workshop_experiments'):
+def main(config_path: str, save_intermediates: bool = False, output_dir: str = None, experiments_dir: str = 'experiments'):
     """
     Run steering experiment with optional intermediate result saving.
     
@@ -756,8 +756,8 @@ if __name__ == '__main__':
                        help='Save intermediate results for validation')
     parser.add_argument('--output-dir', type=str, default=None,
                        help='Directory to save intermediate results')
-    parser.add_argument('--experiments-dir', type=str, default='mechinterp_workshop_experiments',
-                       help='Directory to save experiments (default: mechinterp_workshop_experiments)')
+    parser.add_argument('--experiments-dir', type=str, default='experiments',
+                       help='Directory to save experiments (default: experiments)')
     
     args = parser.parse_args()
     

@@ -470,7 +470,7 @@ def run_parallel_reruns(experiments_to_process: List[Dict], gpu_ids: List[int], 
 
 def main():
     parser = argparse.ArgumentParser(description='Rerun specific datasets across existing experiments')
-    parser.add_argument('--experiments-dir', default='mechinterp_workshop_experiments/',
+    parser.add_argument('--experiments-dir', default='experiments/',
                         help='Directory containing experiments')
     parser.add_argument('--target-datasets', nargs='+', default=['GPQA', 'Twinviews'],
                         help='Datasets to rerun (will be evaluated regardless of existing results)')

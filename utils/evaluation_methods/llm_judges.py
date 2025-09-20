@@ -28,48 +28,6 @@ openai_client = AsyncOpenAI(api_key=os.getenv("OPENAI_API_KEY")) if os.getenv("O
 # Backward compatibility
 client = openai_client
 
-class LLMJudge(EvalMethod):
-    """Using LLM as a judge. Will take in a prompt and return a score. We will use gpt-4.1-mini by default with structured outputs as pydantic classes. We will subclass this with a prompt for each type of LLM judge we want to implement."""
-    def __init__(self, name: str, description: str, output_type: Literal["mc", "generation", "activations"], model: str = "gpt-4.1-mini"):
-        super().__init__(name, description, output_type)
-        self.model = model
-
-    @property
-    def prompt(self) -> str:
-        """The prompt to use for the LLM judge."""
-        pass
-
-    async def evaluate(self, output: str, *args, **kwargs) -> float:
-        """Evaluate the method on the provided data. Always return a list of floats where higher is better."""
-        response = await client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {"role": "system", "content": self.prompt},
-                {"role": "user", "content": output}
-            ],
-            max_tokens=2048,
-            temperature=0.0
-        )
-        # Assuming the response contains a structured output with a score
-        score = response.choices[0].message.content
-        print(f"LLM Judge response: {score}")
-        return 0.0  # for now.  
-        # return [float(score)]
-
-class InstructionLLMJudge(LLMJudge):
-    """For evaluating whether the output adequately followed the instructions. Prompt copied from [AxBench](https://arxiv.org/pdf/2501.17148#page=35)"""
-    @property
-    def prompt(self) -> str:
-        return "Please act as an impartial judge and evaluate whether the sentence fragment provided below is related to the instruction. Focus solely on the degree of relatedness in terms of topic, regardless of grammar, coherence, or informativeness. Begin your evaluation by providing a brief explanation of whether the sentence is related to the instruction, and point out references related to the instruction. After providing your explanation, rate the instruction relevance on a scale from 0 to 2, where 0 indicates the sentence is unrelated to the instruction, 1 indicates it is somewhat related but only minimally or indirectly relevant in terms of topic, and 2 indicates it is more clearly and directly related to the instruction. Provide your rating using this exact format: \"Rating: [[score]]\"."
-
-class FluencyLLMJudge(LLMJudge):
-    """For evaluating the fluency of the output. Prompt copied from [AxBench](https://arxiv.org/pdf/2501.17148#page=36)"""
-    def __init__(self, model: str = "gpt-4.1-mini"):
-        super().__init__(name="Fluency LLM Judge", description="Evaluates the fluency of a sentence fragment using an LLM.", output_type="generation", model=model)
-    @property
-    def prompt(self) -> str:
-        return "Please act as an impartial judge and evaluate the fluency of the sentence fragment provided below. Focus solely on fluency, disregarding its completeness, relevance, coherence with any broader context, or informativeness. Begin your evaluation by briefly describing the fluency of the sentence, noting any unnatural phrasing, awkward transitions, grammatical errors, or repetitive structures that may hinder readability. After providing your explanation, rate the sentence's fluency on a scale from 0 to 2, where 0 indicates the sentence is not fluent and highly unnatural (e.g., incomprehensible or repetitive), 1 indicates it is somewhat fluent but contains noticeable errors or awkward phrasing, and 2 indicates the sentence is fluent and almost perfect. Provide your rating using this exact format: \"Rating: [[score]]\"."
-
 class LlamaGuard(EvalMethod):
     """Uses [Llama Guard 4](https://www.llama.com/llama-protections/) through the [Llama API Moderations endpoint](https://llama.developer.meta.com/docs/api/moderations/?team_id=9489284844486759).
 

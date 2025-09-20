@@ -19,7 +19,7 @@ class ExperimentSaver:
       - metadata.json: JSON metadata including hyperparameters and scores
     """
 
-    def __init__(self, root_dir: str = "mechinterp_workshop_experiments"):
+    def __init__(self, root_dir: str = "experiments"):
         self.root_dir = root_dir
         os.makedirs(self.root_dir, exist_ok=True)
     

@@ -156,7 +156,7 @@ def main():
                        help='Skip OOD evaluation')
     parser.add_argument('--skip-metrics', action='store_true', 
                        help='Skip concept metrics')
-    parser.add_argument('--experiments-dir', default='mechinterp_workshop_experiments',
+    parser.add_argument('--experiments-dir', default='experiments',
                        help='Experiments directory')
     
     # Job management  
@@ -186,7 +186,7 @@ def main():
         base_args.append('--skip-ood')  
     if args.skip_metrics:
         base_args.append('--skip-metrics')
-    if args.experiments_dir != 'mechinterp_workshop_experiments':
+    if args.experiments_dir != 'experiments':
         base_args.extend(['--experiments-dir', args.experiments_dir])
     
     # Generate all experiments

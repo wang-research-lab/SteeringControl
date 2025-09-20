@@ -32,7 +32,7 @@ sns.set_palette("husl")
 def collect_concept_metrics_files(search_dirs: List[str] = None) -> List[str]:
     """Collect all concept_metrics.yaml files from specified directories."""
     if search_dirs is None:
-        search_dirs = ["./mechinterp_workshop_experiments"]
+        search_dirs = ["./experiments"]
     
     metrics_files = []
     
@@ -864,13 +864,13 @@ def main():
         epilog="""
 Examples:
     python analyze_concept_metrics.py
-    python analyze_concept_metrics.py --experiments-dir mechinterp_workshop_experiments
+    python analyze_concept_metrics.py --experiments-dir experiments
     python analyze_concept_metrics.py --output-prefix my_analysis
         """
     )
     
-    parser.add_argument('--experiments-dir', default='mechinterp_workshop_experiments',
-                       help='Directory containing experiment results (default: mechinterp_workshop_experiments)')
+    parser.add_argument('--experiments-dir', default='experiments',
+                       help='Directory containing experiment results (default: experiments)')
     parser.add_argument('--output-prefix', default='concept_metrics_analysis',
                        help='Prefix for output files (default: concept_metrics_analysis)')
     

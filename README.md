@@ -23,24 +23,58 @@ We hope this benchmark will foster development of more precise steering methods 
 - 🔧 **Modular framework** decomposing training-free steering methods into standardized, interchangeable components
 
 ## 🚀 Quick Start
+Before running, ensure you have Python 3.10+ with an up-to-date version of pip (`pip install --upgrade pip` if necessary). A CUDA-capable GPU is recommended for larger models.
 
 ```bash
 # Clone repository
 git clone https://github.com/wang-research-lab/SteeringControl.git
 cd SteeringControl
 
+# Create a virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+
 # Install dependencies
 pip install -e .
 
-# Run complete steering pipeline
-python scripts/run/run_full_pipeline.py -m qwen25-7b -c refusal_base -M dim
+# Configure .env file
+cp .env.example .env
+# Edit .env to set API keys (see below for requirements)
 
-# Run with different entanglement controls
-python scripts/run/run_full_pipeline.py -m qwen25-7b -c refusal_base -M dim_nokl      # No KL constraint
-python scripts/run/run_full_pipeline.py -m qwen25-7b -c refusal_base -M dim_conditional # With CAST
+# Quick test with no API keys needed (primary behavior only, debug mode, small model)
+python scripts/run/run_full_pipeline.py -m qwen25-05b -c explicit_bias -M dim --primary-only --debug
+
 ```
 
+### API Key Requirements
+
+Different experiments require different API keys:
+
+**For Primary Behaviors Only** (no API keys needed):
+- Explicit/Implicit Bias (ToxiGen, BBQ) - uses exact match evaluation
+- Intrinsic Hallucination (FaithEval) - uses exact match evaluation
+
+**Requires Groq API Key** (`GROQ_API_KEY`):
+- Extrinsic Hallucination (PreciseWikiQA) - uses `llama-3.3-70b-versatile` for evaluation
+- Refusal (SALADBench) - if using `REFUSAL_EVAL_METHOD=GROQ` (default)
+
+**Requires OpenAI API Key** (`OPENAI_API_KEY`):
+- Secondary behavior evaluation (entanglement measurement)
+- 5 DarkBench datasets: Brand Bias, Sycophancy, Anthropomorphism, User Retention, Sneaking
+
 ## 🧪 Running Experiments
+### Example Commands
+We support 5 main steering methods (DIM, ACE, CAA, PCA, LAT), each with 3 variants (standard, no KL divergence check, conditional/CAST) on 17 datasets based on 3 primary behaviors specified by 5 concepts (`explicit_bias`, `implicit_bias`, `hallucination_extrinsic`, `hallucination_intrinsic`, `refusal_base`).
+
+
+```bash
+# Full evaluation with entanglement measurement (requires OpenAI key and other keys as needed)
+python scripts/run/run_full_pipeline.py -m qwen25-7b -c explicit_bias -M dim
+
+# Different steering variants
+python scripts/run/run_full_pipeline.py -m qwen25-7b -c explicit_bias -M dim_nokl      # No KL constraint
+python scripts/run/run_full_pipeline.py -m qwen25-7b -c explicit_bias -M dim_conditional # With CAST
+```
 
 ### Parallel Execution
 For comprehensive evaluation across multiple models, behaviors, and methods:
@@ -50,13 +84,15 @@ python scripts/run/run_parallel_experiments.py \
     --skip-metrics \
     --concepts explicit_bias implicit_bias hallucination_extrinsic refusal_base hallucination_intrinsic \
     --model llama3-1-8b qwen25-7b \
-    --methods ace_conditional \
+    --methods dim dim_nokl dim_conditional \
     --gpu 0 1 2 3
 ```
 
 This runs experiments across specified concepts and models in parallel using multiple GPUs. Adjust the concept, model, and method lists as needed, as well as the GPU IDs based on your setup with CUDA_VISIBLE_DEVICES.
 
 ### Viewing Results
+
+**Results Location**: All experiments are saved to the `experiments/` directory by default, organized as `experiments/{method}_{concept}_{model}/{timestamp}/`.
 
 For analysis, run the following scripts to aggregate results and create visualizations as in the paper:
 

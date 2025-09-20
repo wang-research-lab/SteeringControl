@@ -2,7 +2,7 @@ from datasets import load_dataset, Dataset
 from typing import List, Optional, Dict, Union
 from data.steering_data import FormattedDataset, REPE_FORMAT, REPE_FORMAT_INSTR_ONLY, CAA_FORMAT_INSTR_ONLY
 from utils.enums import SteeringFormat, FormatMode, OutputType, Concept
-from utils.evaluation_methods.llm_judges import WildGuard, LlamaGuard
+from utils.evaluation_methods.llm_judges import LlamaGuard
 from utils.evaluation_methods.reference_free import RefusalSubstringMatching
 import random
 

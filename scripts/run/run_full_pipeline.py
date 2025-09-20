@@ -311,8 +311,8 @@ Examples:
                        help='Debug mode: set n=8 for all datasets to speed up testing')
     
     # Experiments directory options
-    parser.add_argument('--experiments-dir', default='mechinterp_workshop_experiments',
-                       help='Directory to save/load experiments (default: mechinterp_workshop_experiments)')
+    parser.add_argument('--experiments-dir', default='experiments',
+                       help='Directory to save/load experiments (default: experiments)')
     
     args = parser.parse_args()
     

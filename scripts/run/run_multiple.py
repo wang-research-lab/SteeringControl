@@ -256,8 +256,8 @@ if __name__ == '__main__':
         '--debug', action='store_true',
         help='Debug mode: set n=8 for all datasets to speed up testing')
     parser.add_argument(
-        '--experiments-dir', default='mechinterp_workshop_experiments',
-        help='Directory to save experiments (default: mechinterp_workshop_experiments)')
+        '--experiments-dir', default='experiments',
+        help='Directory to save experiments (default: experiments)')
     args = parser.parse_args()
     main(selected_models=args.models,
          selected_concepts=args.concepts,
