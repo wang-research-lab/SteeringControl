@@ -752,6 +752,12 @@ def plot_pareto_frontier(data: Dict, output_dir: str = "."):
     
     plt.tight_layout()
 
+    # Create subdirectories for other formats
+    svg_dir = os.path.join(output_dir, 'svgs')
+    pdf_dir = os.path.join(output_dir, 'pdfs')
+    os.makedirs(svg_dir, exist_ok=True)
+    os.makedirs(pdf_dir, exist_ok=True)
+
     # Save in all formats
     plt.savefig(os.path.join(output_dir, 'pareto_frontier_combined.png'),
                dpi=300, bbox_inches='tight')
