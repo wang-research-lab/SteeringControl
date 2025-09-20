@@ -1,0 +1,8 @@
+extends: ../test/base_experiment.yaml
+
+model:
+  class: utils.supported_llms.Gemma2
+  params:
+    model_name: "google/gemma-2-2b-it"
+    device_map: "auto"
+    # use_vllm: true

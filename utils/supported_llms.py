@@ -95,3 +95,46 @@ class Llama3(InterventionLLM):
     @property
     def has_chat_template(self):
         return True
+
+class Gemma2(InterventionLLM):
+    """
+    Gemma2ForCausalLM(
+      (model): Gemma2Model(
+        (embed_tokens): Embedding(256000, 2304, padding_idx=0)
+        (layers): ModuleList(
+          (0-25): 26 x Gemma2DecoderLayer(
+            (self_attn): Gemma2Attention(
+              (q_proj): Linear(in_features=2304, out_features=2048, bias=False)
+              (k_proj): Linear(in_features=2304, out_features=1024, bias=False)
+              (v_proj): Linear(in_features=2304, out_features=1024, bias=False)
+              (o_proj): Linear(in_features=2048, out_features=2304, bias=False)
+            )
+            (mlp): Gemma2MLP(
+              (gate_proj): Linear(in_features=2304, out_features=9216, bias=False)
+              (up_proj): Linear(in_features=2304, out_features=9216, bias=False)
+              (down_proj): Linear(in_features=9216, out_features=2304, bias=False)
+              (act_fn): PytorchGELUTanh()
+            )
+            (input_layernorm): Gemma2RMSNorm((2304,), eps=1e-06)
+            (post_attention_layernorm): Gemma2RMSNorm((2304,), eps=1e-06)
+            (pre_feedforward_layernorm): Gemma2RMSNorm((2304,), eps=1e-06)
+            (post_feedforward_layernorm): Gemma2RMSNorm((2304,), eps=1e-06)
+          )
+        )
+        (norm): Gemma2RMSNorm((2304,), eps=1e-06)
+        (rotary_emb): Gemma2RotaryEmbedding()
+      )
+      (lm_head): Linear(in_features=2304, out_features=256000, bias=False)
+    )
+    """
+
+    @staticmethod
+    def get_mapping():
+        return {
+            "attn": "self_attn",
+            "mlp": "mlp",
+        }
+
+    @property
+    def has_chat_template(self):
+        return True

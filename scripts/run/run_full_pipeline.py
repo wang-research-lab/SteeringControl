@@ -202,7 +202,11 @@ def run_concept_metrics(steering_dirs: List[str], baseline_dir: Optional[str] = 
             exp_name = os.path.basename(os.path.dirname(b_dir))
             parts = exp_name.split('_')
             if len(parts) >= 2 and parts[0] == 'baseline':
-                model = parts[1]  # baseline_model format
+                # Handle both baseline_model and baseline_model_debug formats
+                if len(parts) == 3 and parts[-1] == 'debug':
+                    model = '_'.join(parts[1:])  # e.g., qwen25-05b_debug
+                else:
+                    model = parts[1]
                 model_to_baseline[model] = b_dir
         
         logger.info(f"Using {len(model_to_baseline)} model-specific baselines")
@@ -214,7 +218,11 @@ def run_concept_metrics(steering_dirs: List[str], baseline_dir: Optional[str] = 
             if len(parts) < 3:
                 continue
                 
-            model = parts[-1]
+            # Handle steering experiments with _debug suffix
+            if len(parts) >= 4 and parts[-1] == 'debug':
+                model = '_'.join(parts[-2:])  # e.g., qwen25-05b_debug
+            else:
+                model = parts[-1]  # e.g., qwen25-05b
             baseline_path = model_to_baseline.get(model)
             
             if baseline_path is None:
