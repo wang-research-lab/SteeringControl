@@ -11,6 +11,11 @@ import seaborn as sns
 from matplotlib.colors import TwoSlopeNorm, ListedColormap
 from matplotlib.gridspec import GridSpec
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+# Add necessary directories to Python path
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'run'))
+
 from analyze_concept_metrics import parse_experiment_name
 from run_concept_metrics import load_all_scores_from_experiment
 from run_full_pipeline import find_baseline_experiments
