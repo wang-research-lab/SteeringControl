@@ -527,7 +527,14 @@ def main():
     
     # Override force_rerun if missing_only is specified
     force_rerun = args.force_rerun and not args.missing_only
-    
+
+    # Define all possible datasets once
+    all_possible_datasets = ['GPQA', 'Twinviews', 'ARC_C', 'TruthfulQA', 'CMTEST',
+                           'DarkBenchAnthro', 'DarkBenchBrandBias', 'DarkBenchRetention',
+                           'DarkBenchSneaking', 'DarkBenchSynchopancy', 'BBQ', 'ToxiGen',
+                           'FaithEvalCounterfactual', 'FaithEvalInconsistent', 'FaithEvalUnanswerable',
+                           'SaladBench', 'PreciseWiki', 'GSM8K', 'EnronEmail']
+
     for exp in all_experiments:
         # Apply filters
         if args.filter_method and exp['method'].upper() != args.filter_method.upper():
@@ -536,35 +543,32 @@ def main():
             continue
         if args.filter_model and args.filter_model.lower() not in exp['model'].lower():
             continue
-            
+
         existing = get_existing_datasets(exp['path'])
-        
+
         if force_rerun:
-            # Force rerun mode: process ALL experiments, rerun target datasets regardless
+            # Force rerun mode: rerun target datasets even if they already exist
+            # This will delete and re-evaluate the target datasets
             datasets_to_rerun = args.target_datasets
             missing_for_exp = [d for d in args.target_datasets if d not in existing]
-            
+
             # Skip everything EXCEPT our target datasets (force them to rerun)
-            all_possible_datasets = ['GPQA', 'Twinviews', 'ARC_C', 'TruthfulQA', 'CMTEST', 
-                                   'DarkBenchAnthro', 'DarkBenchBrandBias', 'DarkBenchRetention',
-                                   'DarkBenchSneaking', 'DarkBenchSynchopancy', 'BBQ', 'ToxiGen',
-                                   'FaithEvalCounterfactual', 'FaithEvalInconsistent', 'FaithEvalUnanswerable',
-                                   'SaladBench', 'PreciseWiki', 'GSM8K', 'EnronEmail']
             datasets_to_skip = [d for d in all_possible_datasets if d not in args.target_datasets]
-            
+
             exp['datasets_to_rerun'] = datasets_to_rerun
             exp['missing_datasets'] = missing_for_exp  # For display purposes
             exp['datasets_to_skip'] = datasets_to_skip
             experiments_to_process.append(exp)
-            
+
         else:
-            # Missing-only mode: only process experiments missing target datasets
+            # Missing-only mode: only rerun target datasets that are actually missing
             missing_for_exp = [d for d in args.target_datasets if d not in existing]
-            
+
             if missing_for_exp:
-                # Skip existing datasets, only run missing ones
-                datasets_to_skip = list(existing & set(all_possible_datasets))
-                
+                # Skip all existing datasets (don't rerun them)
+                # Only run the missing target datasets
+                datasets_to_skip = list(existing)
+
                 exp['datasets_to_rerun'] = missing_for_exp
                 exp['missing_datasets'] = missing_for_exp
                 exp['datasets_to_skip'] = datasets_to_skip
