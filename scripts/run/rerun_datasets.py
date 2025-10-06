@@ -215,14 +215,26 @@ def find_completed_experiments(base_dir: str, include_baselines: bool = True) ->
             )
             
             if has_results and os.path.exists(config_file):
-                # Parse experiment info - create fake path for parse_experiment_name
-                fake_path = os.path.join(subdir_path, "concept_metrics.yaml")
-                method, concept, model = parse_experiment_name(fake_path)
-                if method and concept and model:
+                # Parse experiment info
+                if is_baseline:
+                    # Baseline experiments have format: baseline_model
+                    parts = exp_name.split('_', 1)
+                    if len(parts) == 2:
+                        method = 'baseline'
+                        concept = 'none'  # Baselines don't have concepts
+                        model = parts[1]
+                    else:
+                        continue
+                else:
+                    # Regular experiments - create fake path for parse_experiment_name
+                    fake_path = os.path.join(subdir_path, "concept_metrics.yaml")
+                    method, concept, model = parse_experiment_name(fake_path)
+
+                if method and model:
                     experiments.append({
                         'name': exp_name,
                         'method': method,
-                        'concept': concept, 
+                        'concept': concept if concept else 'none',
                         'model': model,
                         'path': subdir_path,
                         'config_file': config_file,
