@@ -245,9 +245,16 @@ def find_completed_experiments(base_dir: str, include_baselines: bool = True) ->
 
 
 def get_existing_datasets(exp_path: str) -> Set[str]:
-    """Get datasets that have already been evaluated for this experiment."""
-    existing = set()
-    
+    """Get datasets that have successfully been evaluated for this experiment.
+
+    A dataset is considered "existing" only if:
+    1. It appears in the YAML results files AND
+    2. The corresponding directory actually exists
+
+    This catches cases where directories were deleted but YAML entries remain.
+    """
+    yaml_datasets = set()
+
     # Check main test results
     main_results_path = os.path.join(exp_path, 'test_results.yaml')
     if os.path.exists(main_results_path):
@@ -255,10 +262,10 @@ def get_existing_datasets(exp_path: str) -> Set[str]:
             with open(main_results_path, 'r') as f:
                 results = yaml.safe_load(f)
                 if results:
-                    existing.update(results.keys())
+                    yaml_datasets.update(results.keys())
         except:
             pass
-    
+
     # Check OOD results
     ood_results_path = os.path.join(exp_path, 'ood', 'ood_test_results.yaml')
     if os.path.exists(ood_results_path):
@@ -266,10 +273,10 @@ def get_existing_datasets(exp_path: str) -> Set[str]:
             with open(ood_results_path, 'r') as f:
                 results = yaml.safe_load(f)
                 if results:
-                    existing.update(results.keys())
+                    yaml_datasets.update(results.keys())
         except:
             pass
-            
+
     # Check secondary results
     secondary_results_path = os.path.join(exp_path, 'ood', 'secondary_test_results.yaml')
     if os.path.exists(secondary_results_path):
@@ -277,10 +284,23 @@ def get_existing_datasets(exp_path: str) -> Set[str]:
             with open(secondary_results_path, 'r') as f:
                 results = yaml.safe_load(f)
                 if results:
-                    existing.update(results.keys())
+                    yaml_datasets.update(results.keys())
         except:
             pass
-    
+
+    # Now verify that directories actually exist for these datasets
+    existing = set()
+    for dataset in yaml_datasets:
+        # Check possible locations for this dataset
+        possible_paths = [
+            os.path.join(exp_path, 'ood', dataset),  # Primary OOD location
+            os.path.join(exp_path, 'ood', 'secondary', dataset),  # Secondary location
+        ]
+
+        # If ANY of the possible paths exist, consider it existing
+        if any(os.path.exists(p) for p in possible_paths):
+            existing.add(dataset)
+
     return existing
 
 
