@@ -85,27 +85,29 @@ def gpu_rerun_worker(gpu_queue, job_queue, log_dir, results_queue):
                             dirs_removed.append(dataset_dir)
                 
                 # Create subprocess command
+                run_ood_script = os.path.join(script_dir, 'run_ood_datasets.py')
                 cmd = [
-                    sys.executable, 'run_ood_datasets.py',
+                    sys.executable, run_ood_script,
                     exp_info['path'],
                     '--secondary'
                 ]
-                
+
                 # Add skip arguments
                 if datasets_to_skip:
                     cmd.extend(['--skip'] + datasets_to_skip)
-                
+
                 # Set up environment with isolated GPU
                 env = os.environ.copy()
                 env['CUDA_VISIBLE_DEVICES'] = str(gpu_id)
-                
-                # Run subprocess
+
+                # Run subprocess from project root (2 levels up from script_dir)
+                project_root = os.path.dirname(os.path.dirname(script_dir))
                 result = subprocess.run(
                     cmd,
                     env=env,
                     capture_output=True,
                     text=True,
-                    cwd=script_dir
+                    cwd=project_root
                 )
                 
                 duration = time.time() - start_time
