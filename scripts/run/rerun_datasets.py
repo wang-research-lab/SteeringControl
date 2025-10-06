@@ -37,10 +37,13 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
-# Add current directory to path for local imports
-# Imports work automatically with pip install -e .
+# Add necessary directories to Python path
+import sys
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(script_dir, '..', 'analysis'))
+sys.path.insert(0, script_dir)
 
-from create_heatmap_data import find_experiment_dirs, load_all_scores_from_experiment, parse_experiment_name
+from analyze_concept_metrics import parse_experiment_name
 from run_ood_datasets import run_ood_evaluation
 
 
@@ -212,8 +215,9 @@ def find_completed_experiments(base_dir: str, include_baselines: bool = True) ->
             )
             
             if has_results and os.path.exists(config_file):
-                # Parse experiment info
-                method, concept, model = parse_experiment_name(exp_name)
+                # Parse experiment info - create fake path for parse_experiment_name
+                fake_path = os.path.join(subdir_path, "concept_metrics.yaml")
+                method, concept, model = parse_experiment_name(fake_path)
                 if method and concept and model:
                     experiments.append({
                         'name': exp_name,
