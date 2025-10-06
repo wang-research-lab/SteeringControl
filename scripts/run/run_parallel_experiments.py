@@ -37,12 +37,14 @@ def gpu_worker(gpu_queue, job_queue, log_dir, results_queue):
                 
                 start_time = time.time()
                 try:
+                    # Set working directory to project root (two levels up from scripts/run/)
+                    project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
                     result = subprocess.run(
                         cmd,
                         env=env,
                         capture_output=True,
                         text=True,
-                        cwd=os.path.dirname(os.path.abspath(__file__))
+                        cwd=project_root
                     )
                     
                     duration = time.time() - start_time
@@ -117,9 +119,9 @@ def generate_experiments(models, methods, concepts, base_args=None):
     
     for model, method, concept in product(models, methods, concepts):
         cmd = [
-            'python', 'run_full_pipeline.py',
+            'python', 'scripts/run/run_full_pipeline.py',
             '-m', model,
-            '-M', method, 
+            '-M', method,
             '-c', concept
         ] + base_args
         
