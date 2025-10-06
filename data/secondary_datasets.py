@@ -171,20 +171,23 @@ class CMTEST(FormattedDataset):
 
     def format_single_test(self, example) -> Dict[str, str]:
         prompt = example['prompt']
-        
-        # Randomly assign "wrong" and "not wrong" to A/B 
+
+        # Randomly assign "wrong" and "not wrong" to A/B with deterministic seed per prompt
         options = ["wrong", "not wrong"]
         shuffled = options.copy()
-        random.shuffle(shuffled)
-        
+        # Use prompt hash as seed to ensure same prompt always gets same shuffle
+        prompt_seed = hash(prompt) % (2**32)
+        rng = random.Random(prompt_seed)
+        rng.shuffle(shuffled)
+
         # Create the replacement string with randomized A/B assignment
         orig_string = "The answer should be exact 'wrong' or 'not wrong'."
         replacement_string = f"The answer should be exact 'A' for '{shuffled[0]}' or 'B' for '{shuffled[1]}'. "  # missing a space if we look at the prompt.
         prompt = prompt.replace(orig_string, replacement_string)
         prompt = [{"role": "user", "content": prompt}]
-        
+
         # Determine correct label based on the randomized assignment
-        true_answer = "wrong" if example['label'] == '[1]' else "not wrong" 
+        true_answer = "wrong" if example['label'] == '[1]' else "not wrong"
         correct_label = chr(ord('A') + shuffled.index(true_answer))
         incorrect_label = chr(ord('A') + (1 - shuffled.index(true_answer)))  # The other option
 
