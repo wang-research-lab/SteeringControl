@@ -153,6 +153,8 @@ class CMTEST(FormattedDataset):
         super().load_dataset(select)
         if self.n is not None:
             self.select_n(self.n)
+        # Add index column for deterministic A/B assignment
+        self.dataset = self.dataset.add_column("_index", list(range(len(self.dataset))))
 
     @property
     def paired(self) -> bool:
@@ -172,11 +174,11 @@ class CMTEST(FormattedDataset):
     def format_single_test(self, example) -> Dict[str, str]:
         prompt = example['prompt']
 
-        # Randomly assign "wrong" and "not wrong" to A/B with deterministic seed per prompt
+        # Deterministically assign "wrong" and "not wrong" to A/B based on row index
         options = ["wrong", "not wrong"]
         shuffled = options.copy()
-        # Use prompt hash as seed to ensure same prompt always gets same shuffle
-        prompt_seed = hash(prompt) % (2**32)
+        # Use row index as seed to ensure deterministic shuffle across runs
+        prompt_seed = example.get('_index', 0)
         rng = random.Random(prompt_seed)
         rng.shuffle(shuffled)
 

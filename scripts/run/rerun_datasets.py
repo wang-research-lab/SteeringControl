@@ -249,54 +249,25 @@ def find_completed_experiments(base_dir: str, include_baselines: bool = True) ->
 def get_existing_datasets(exp_path: str) -> Set[str]:
     """Get datasets that have successfully been evaluated for this experiment.
 
-    A dataset is considered "existing" only if:
-    1. It appears in the YAML results files AND
-    2. The corresponding directory actually exists
-
-    This catches cases where directories were deleted but YAML entries remain.
+    A dataset is considered "existing" if the corresponding directory with actual
+    evaluation data exists. We check directories directly rather than YAML files
+    because YAML files can be incomplete/overwritten during partial reruns.
     """
-    yaml_datasets = set()
-
-    # Check main test results
-    main_results_path = os.path.join(exp_path, 'test_results.yaml')
-    if os.path.exists(main_results_path):
-        try:
-            with open(main_results_path, 'r') as f:
-                results = yaml.safe_load(f)
-                if results:
-                    yaml_datasets.update(results.keys())
-        except:
-            pass
-
-    # Check OOD results
-    ood_results_path = os.path.join(exp_path, 'ood', 'ood_test_results.yaml')
-    if os.path.exists(ood_results_path):
-        try:
-            with open(ood_results_path, 'r') as f:
-                results = yaml.safe_load(f)
-                if results:
-                    yaml_datasets.update(results.keys())
-        except:
-            pass
-
-    # Check secondary results
-    secondary_results_path = os.path.join(exp_path, 'ood', 'secondary_test_results.yaml')
-    if os.path.exists(secondary_results_path):
-        try:
-            with open(secondary_results_path, 'r') as f:
-                results = yaml.safe_load(f)
-                if results:
-                    yaml_datasets.update(results.keys())
-        except:
-            pass
-
-    # Now verify that directories actually exist for these datasets
     existing = set()
-    for dataset in yaml_datasets:
+
+    # All possible dataset names to check
+    all_possible_datasets = ['GPQA', 'Twinviews', 'ARC_C', 'TruthfulQA', 'CMTEST',
+                           'DarkBenchAnthro', 'DarkBenchBrandBias', 'DarkBenchRetention',
+                           'DarkBenchSneaking', 'DarkBenchSynchopancy', 'BBQ', 'ToxiGen',
+                           'FaithEvalCounterfactual', 'FaithEvalInconsistent', 'FaithEvalUnanswerable',
+                           'SaladBench', 'PreciseWiki', 'GSM8K', 'EnronEmail']
+
+    for dataset in all_possible_datasets:
         # Check possible locations for this dataset
+        # Secondary datasets have nested structure: secondary/GPQA/GPQA/
         possible_paths = [
             os.path.join(exp_path, 'ood', dataset),  # Primary OOD location
-            os.path.join(exp_path, 'ood', 'secondary', dataset),  # Secondary location
+            os.path.join(exp_path, 'ood', 'secondary', dataset, dataset),  # Nested secondary location
         ]
 
         # If ANY of the possible paths exist, consider it existing
@@ -309,7 +280,7 @@ def get_existing_datasets(exp_path: str) -> Set[str]:
 def analyze_missing_datasets(experiments_dir: str, target_datasets: List[str] = None):
     """Analyze which datasets are missing across experiments."""
     if target_datasets is None:
-        target_datasets = ['GPQA', 'Twinviews', 'ARC_C', 'TruthfulQA', 'CMTEST', 'GSM8K', 'EnronEmail']
+        target_datasets = ['GPQA', 'Twinviews', 'ARC_C', 'TruthfulQA', 'CMTEST']
     
     experiments = find_completed_experiments(experiments_dir)
     
@@ -587,9 +558,11 @@ def main():
             missing_for_exp = [d for d in args.target_datasets if d not in existing]
 
             if missing_for_exp:
-                # Skip all existing datasets (don't rerun them)
-                # Only run the missing target datasets
-                datasets_to_skip = list(existing)
+                # Skip all datasets except the missing target ones
+                # This includes: (1) existing datasets and (2) non-target datasets
+                datasets_to_skip = list(existing) + [d for d in all_possible_datasets if d not in args.target_datasets]
+                # Remove duplicates
+                datasets_to_skip = list(set(datasets_to_skip))
 
                 exp['datasets_to_rerun'] = missing_for_exp
                 exp['missing_datasets'] = missing_for_exp

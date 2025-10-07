@@ -19,11 +19,55 @@ from utils.steering_utils import CandidateDirection
 from direction_application.base import InterventionType
 from utils.enums import DEFAULT_MC_METHOD
 from utils.experiment_utils import (
-    instantiate, 
-    load_conditional_configuration, 
+    instantiate,
+    load_conditional_configuration,
     create_conditional_applier,
     setup_applier_kwargs_from_steering_direction
 )
+
+
+def rebuild_aggregated_yaml(ood_root, filename='ood_test_results.yaml', subdirs=None):
+    """Rebuild aggregated YAML from individual dataset metrics.yaml files.
+
+    Args:
+        ood_root: Root directory containing dataset subdirectories
+        filename: Name of aggregated YAML file to create
+        subdirs: List of subdirectories to search (e.g., ['secondary']). If None, search ood_root directly.
+    """
+    aggregated = {}
+
+    # Determine search path
+    if subdirs:
+        search_paths = [os.path.join(ood_root, subdir) for subdir in subdirs]
+    else:
+        search_paths = [ood_root]
+
+    # Collect all metrics from individual dataset directories
+    for search_path in search_paths:
+        if not os.path.exists(search_path):
+            continue
+
+        for dataset_name in os.listdir(search_path):
+            dataset_dir = os.path.join(search_path, dataset_name)
+            if not os.path.isdir(dataset_dir):
+                continue
+
+            metrics_file = os.path.join(dataset_dir, 'metrics.yaml')
+            if os.path.exists(metrics_file):
+                try:
+                    with open(metrics_file, 'r') as f:
+                        metrics = yaml.safe_load(f)
+                        if metrics:
+                            aggregated[dataset_name] = metrics
+                except Exception as e:
+                    print(f"Warning: Could not load {metrics_file}: {e}")
+
+    # Write aggregated results
+    output_path = os.path.join(ood_root, filename)
+    with open(output_path, 'w') as wf:
+        yaml.safe_dump(aggregated, wf, sort_keys=False)
+
+    return aggregated
 
 
 def get_primary_classes():
@@ -289,10 +333,9 @@ def run_ood_evaluation(experiment_dirs=None, secondary=False, no_primary=False, 
                     with open(error_file, 'w') as ef:
                         ef.write(tb)
                     print(f"       ❌ Error evaluating {ds_name}; see {error_file}")
-            # Save aggregated OOD results
+            # Rebuild aggregated OOD results from all existing metrics files
+            rebuild_aggregated_yaml(ood_root, 'ood_test_results.yaml', subdirs=None)
             results_path = os.path.join(ood_root, 'ood_test_results.yaml')
-            with open(results_path, 'w') as wf:
-                yaml.safe_dump(ood_results, wf, sort_keys=False)
             print(f"   📁 OOD evaluation results saved to: {results_path}")
         # Evaluate secondary datasets if requested
         if secondary and secondary_tests:
@@ -380,9 +423,9 @@ def run_ood_evaluation(experiment_dirs=None, secondary=False, no_primary=False, 
                     with open(error_file, 'w') as ef:
                         ef.write(tb)
                     print(f"       ❌ Error evaluating {ds_name}; see {error_file}")
+            # Rebuild aggregated secondary results from all existing metrics files
+            rebuild_aggregated_yaml(ood_root, 'secondary_test_results.yaml', subdirs=['secondary'])
             sec_results_path = os.path.join(ood_root, 'secondary_test_results.yaml')
-            with open(sec_results_path, 'w') as wf:
-                yaml.safe_dump(secondary_results, wf, sort_keys=False)
             print(f"📁 Secondary OOD evaluation results saved to: {sec_results_path}")
             
             if debug:
