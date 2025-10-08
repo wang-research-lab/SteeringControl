@@ -255,8 +255,8 @@ Answer:"""
 
     def get_evaluation_methods(self):
         return [
-            HighestLikelihood("FaithEval", "Checks likelihood.", self.output_type),
-            SubstringMatching("FaithEval", "Checks substring matching.", self.output_type),
+            HighestLikelihood("FaithEval (likelihood)", "Checks likelihood.", self.output_type),
+            SubstringMatching("FaithEval (substring)", "Checks substring matching.", self.output_type),
         ]
 
 ### Extrinsic hallucination datasets ###

@@ -143,16 +143,17 @@ def get_secondary_tests():
     return secondary_tests
 
 
-def run_ood_evaluation(experiment_dirs=None, secondary=False, no_primary=False, skip=None, debug=False):
+def run_ood_evaluation(experiment_dirs=None, secondary=False, no_primary=False, skip=None, debug=False, mc_evaluation_method=None):
     """
     Core OOD evaluation logic.
-    
+
     Args:
         experiment_dirs: List of experiment directory paths
         secondary: Whether to evaluate secondary datasets
         no_primary: Whether to skip primary OOD evaluation
         skip: List of dataset names to skip
         debug: Whether to enable debug mode
+        mc_evaluation_method: Multiple choice evaluation method ('substring', 'likelihood', or 'both')
     """
     if skip is None:
         skip = []
@@ -307,6 +308,8 @@ def run_ood_evaluation(experiment_dirs=None, secondary=False, no_primary=False, 
                             out = yaml.safe_load(rf)
                     else:
                         ood_inference = concept_inference_map.get(cls_path, inference_args)
+                        # Use override if provided, otherwise use config value, otherwise use default
+                        mc_method = mc_evaluation_method if mc_evaluation_method is not None else ood_inference.get('mc_evaluation_method', DEFAULT_MC_METHOD)
                         results = asyncio.run(
                             ds.evaluate(
                                 model=model,
@@ -315,7 +318,7 @@ def run_ood_evaluation(experiment_dirs=None, secondary=False, no_primary=False, 
                                 application_location=app_loc,
                                 applier_kwargs=applier_kwargs,
                                 save_dir=ds_save_dir,
-                                mc_evaluation_method=ood_inference.get('mc_evaluation_method', DEFAULT_MC_METHOD),
+                                mc_evaluation_method=mc_method,
                                 **ood_inference
                             )
                         )
@@ -408,6 +411,8 @@ def run_ood_evaluation(experiment_dirs=None, secondary=False, no_primary=False, 
                             out = yaml.safe_load(rf)
                     else:
                         ood_inference = concept_inference_map.get(cls_path, inference_args)
+                        # Use override if provided, otherwise use config value, otherwise use default
+                        mc_method = mc_evaluation_method if mc_evaluation_method is not None else ood_inference.get('mc_evaluation_method', DEFAULT_MC_METHOD)
                         results = asyncio.run(
                             ds.evaluate(
                                 model=model,
@@ -416,7 +421,7 @@ def run_ood_evaluation(experiment_dirs=None, secondary=False, no_primary=False, 
                                 application_location=app_loc,
                                 applier_kwargs=applier_kwargs,
                                 save_dir=ds_save_dir,
-                                mc_evaluation_method=ood_inference.get('mc_evaluation_method', DEFAULT_MC_METHOD),
+                                mc_evaluation_method=mc_method,
                                 **ood_inference
                             )
                         )
@@ -480,13 +485,18 @@ def main():
         '--debug', action='store_true',
         help="Enable debug mode with verbose logging"
     )
+    parser.add_argument(
+        '--mc-evaluation-method', choices=['substring', 'likelihood', 'both'], default=None,
+        help="Multiple choice evaluation method: 'substring', 'likelihood', or 'both' (overrides config)"
+    )
     args = parser.parse_args()
-    
+
     return run_ood_evaluation(
         experiment_dirs=args.experiment_dirs,
         secondary=args.secondary,
         no_primary=args.no_primary,
         skip=args.skip,
+        mc_evaluation_method=args.mc_evaluation_method,
         debug=args.debug
     )
 

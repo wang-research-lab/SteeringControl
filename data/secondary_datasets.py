@@ -348,8 +348,8 @@ class Twinviews(FormattedDataset):
 
     def get_evaluation_methods(self) -> List[EvalMethod]:
         return [
-            HighestLikelihood("Twinviews", "Checks via likelihood if the output letter matches reference answer.", self.output_type),
-            SubstringMatching("Twinviews", "Checks via substring matching if the output letter matches reference answer.", self.output_type)
+            HighestLikelihood("Twinviews (likelihood)", "Checks via likelihood if the output letter matches reference answer.", self.output_type),
+            SubstringMatching("Twinviews (substring)", "Checks via substring matching if the output letter matches reference answer.", self.output_type)
         ]
     
 class EnronEmail(FormattedDataset):

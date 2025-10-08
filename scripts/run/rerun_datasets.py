@@ -47,14 +47,14 @@ from analyze_concept_metrics import parse_experiment_name
 from run_ood_datasets import run_ood_evaluation
 
 
-def gpu_rerun_worker(gpu_queue, job_queue, log_dir, results_queue):
+def gpu_rerun_worker(gpu_queue, job_queue, log_dir, results_queue, mc_evaluation_method=None):
     """Worker function that processes dataset reruns on assigned GPU."""
     while True:
         gpu_id = None
         try:
             # Get a GPU from the available pool
             gpu_id = gpu_queue.get(timeout=1)
-            
+
             # Get the next job
             exp_info, datasets_to_skip = job_queue.get_nowait()
             experiment_name = exp_info['name']
@@ -95,6 +95,10 @@ def gpu_rerun_worker(gpu_queue, job_queue, log_dir, results_queue):
                 # Add skip arguments
                 if datasets_to_skip:
                     cmd.extend(['--skip'] + datasets_to_skip)
+
+                # Add mc_evaluation_method if specified
+                if mc_evaluation_method:
+                    cmd.extend(['--mc-evaluation-method', mc_evaluation_method])
 
                 # Set up environment with isolated GPU
                 env = os.environ.copy()
@@ -317,7 +321,7 @@ def analyze_missing_datasets(experiments_dir: str, target_datasets: List[str] = 
     return missing_summary
 
 
-def rerun_datasets_for_experiment(exp_info: Dict, datasets_to_skip: List[str], dry_run: bool = False) -> bool:
+def rerun_datasets_for_experiment(exp_info: Dict, datasets_to_skip: List[str], dry_run: bool = False, mc_evaluation_method: str = None) -> bool:
     """Rerun OOD evaluation for target datasets."""
     
     print(f"\\n🔄 Processing {exp_info['name']}")
@@ -369,10 +373,11 @@ def rerun_datasets_for_experiment(exp_info: Dict, datasets_to_skip: List[str], d
         # Run both primary and secondary OOD evaluation
         run_ood_evaluation(
             experiment_dirs=[exp_info['path']],
-            secondary=True,  # Include secondary datasets 
+            secondary=True,  # Include secondary datasets
             no_primary=False,  # Include primary OOD
             skip=datasets_to_skip,  # Skip datasets we already have
-            debug=False
+            debug=False,
+            mc_evaluation_method=mc_evaluation_method
         )
         
         print(f"   ✅ Successfully completed OOD evaluation")
@@ -385,7 +390,7 @@ def rerun_datasets_for_experiment(exp_info: Dict, datasets_to_skip: List[str], d
         return False
 
 
-def run_parallel_reruns(experiments_to_process: List[Dict], gpu_ids: List[int], max_workers: int = None) -> int:
+def run_parallel_reruns(experiments_to_process: List[Dict], gpu_ids: List[int], max_workers: int = None, mc_evaluation_method: str = None) -> int:
     """Run dataset reruns in parallel across multiple GPUs."""
     
     if max_workers is None:
@@ -418,7 +423,7 @@ def run_parallel_reruns(experiments_to_process: List[Dict], gpu_ids: List[int], 
     for i in range(num_workers):
         worker = threading.Thread(
             target=gpu_rerun_worker,
-            args=(gpu_queue, job_queue, log_dir, results_queue),
+            args=(gpu_queue, job_queue, log_dir, results_queue, mc_evaluation_method),
             daemon=True
         )
         worker.start()
@@ -498,7 +503,9 @@ def main():
                         help='GPU IDs to use (e.g., --gpus 0 1 2 3). If not specified, runs sequentially.')
     parser.add_argument('--max-workers', type=int, default=None,
                         help='Maximum number of parallel workers (defaults to number of GPUs)')
-    
+    parser.add_argument('--mc-evaluation-method', choices=['substring', 'likelihood', 'both'], default=None,
+                        help="Multiple choice evaluation method: 'substring', 'likelihood', or 'both' (overrides experiment configs)")
+
     args = parser.parse_args()
     
     if not os.path.exists(args.experiments_dir):
@@ -593,14 +600,14 @@ def main():
     
     if args.gpus and not args.dry_run:
         # Parallel processing with GPU scheduling
-        success_count = run_parallel_reruns(experiments_to_process, args.gpus, args.max_workers)
+        success_count = run_parallel_reruns(experiments_to_process, args.gpus, args.max_workers, args.mc_evaluation_method)
     else:
         # Sequential processing
         if args.gpus:
             print("Note: --gpus specified but running in dry-run mode, using sequential processing")
         
         for exp in tqdm(experiments_to_process, desc="Processing experiments"):
-            success = rerun_datasets_for_experiment(exp, exp['datasets_to_skip'], args.dry_run)
+            success = rerun_datasets_for_experiment(exp, exp['datasets_to_skip'], args.dry_run, args.mc_evaluation_method)
             if success:
                 success_count += 1
     
