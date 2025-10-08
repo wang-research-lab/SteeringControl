@@ -320,7 +320,17 @@ def run_ood_evaluation(experiment_dirs=None, secondary=False, no_primary=False, 
                             )
                         )
                         metrics = {k: sum(v) / len(v) for k, v in results.items() if isinstance(v, list) and v}
-                        avg_metric = sum(metrics.values()) / len(metrics) if metrics else None
+
+                        # Compute avg_metric based on preferred method (default: substring)
+                        preferred_method = ood_inference.get('preferred_avg_metric', 'substring')
+                        if preferred_method in ['substring', 'likelihood']:
+                            # Look for the preferred metric
+                            metric_key = next((k for k in metrics if preferred_method in k.lower()), None)
+                            avg_metric = metrics[metric_key] if metric_key else sum(metrics.values()) / len(metrics) if metrics else None
+                        else:
+                            # Average all metrics
+                            avg_metric = sum(metrics.values()) / len(metrics) if metrics else None
+
                         out = {'metrics': metrics, 'avg_metric': avg_metric}
                         with open(cache_file, 'w') as wf:
                             yaml.safe_dump(out, wf, sort_keys=False)
@@ -411,7 +421,17 @@ def run_ood_evaluation(experiment_dirs=None, secondary=False, no_primary=False, 
                             )
                         )
                         metrics = {k: sum(v) / len(v) for k, v in results.items() if isinstance(v, list) and v}
-                        avg_metric = sum(metrics.values()) / len(metrics) if metrics else None
+
+                        # Compute avg_metric based on preferred method (default: substring)
+                        preferred_method = ood_inference.get('preferred_avg_metric', 'substring')
+                        if preferred_method in ['substring', 'likelihood']:
+                            # Look for the preferred metric
+                            metric_key = next((k for k in metrics if preferred_method in k.lower()), None)
+                            avg_metric = metrics[metric_key] if metric_key else sum(metrics.values()) / len(metrics) if metrics else None
+                        else:
+                            # Average all metrics
+                            avg_metric = sum(metrics.values()) / len(metrics) if metrics else None
+
                         out = {'metrics': metrics, 'avg_metric': avg_metric}
                         with open(cache_file, 'w') as wf:
                             yaml.safe_dump(out, wf, sort_keys=False)

@@ -231,22 +231,23 @@ class FormattedDataset(ABC):
                  applier_kwargs: Optional[Dict[str, Any]] = {},
                  save_dir: Optional[str] = None,
                  gather_evaluations: bool = False,
-                 mc_evaluation_method: Optional[Literal["substring", "likelihood"]] = None,
+                 mc_evaluation_method: Optional[Literal["substring", "likelihood", "both"]] = None,
                  batch_size: int = 1,
                  **generate_kwargs) -> Dict[str, float]:
         """
         Run generation on each test example and compute aggregate evaluation metrics.
         Returns a dict mapping EvalMethod.name to the mean score over all examples.
-        
+
         Args:
             mc_evaluation_method: For multiple choice datasets, which evaluation method to use:
                 - "likelihood": Only HighestLikelihood (default)
                 - "substring": Only SubstringMatching
+                - "both": Run both SubstringMatching and HighestLikelihood
             batch_size: Number of examples to process in each batch (default: 1)
         """
         results = {}
         methods = self.get_evaluation_methods()
-        
+
         # Filter evaluation methods for multiple choice datasets
         if hasattr(self, 'output_type') and self.output_type == OutputType.MC:
             from utils.evaluation_methods.reference_based import SubstringMatching, HighestLikelihood
@@ -254,8 +255,11 @@ class FormattedDataset(ABC):
                 methods = [m for m in methods if isinstance(m, SubstringMatching)]
             elif mc_evaluation_method == "likelihood":
                 methods = [m for m in methods if isinstance(m, HighestLikelihood)]
+            elif mc_evaluation_method == "both":
+                # Run both substring and likelihood - no filtering needed
+                pass
             else:
-                raise ValueError(f"Invalid mc_evaluation_method: {mc_evaluation_method}. Must be 'substring' or 'likelihood'.")
+                raise ValueError(f"Invalid mc_evaluation_method: {mc_evaluation_method}. Must be 'substring', 'likelihood', or 'both'.")
         
         # Reset methods (for those supporting gathering)
         for m in methods:

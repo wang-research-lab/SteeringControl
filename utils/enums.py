@@ -1,10 +1,11 @@
 from enum import Enum
 
-DEFAULT_MC_METHOD = 'substring'  # 'likelihood'  # Default method for multiple-choice evaluation. either 'substring' or 'likehood'
+DEFAULT_MC_METHOD = 'both'  # Options: 'substring', 'likelihood', or 'both'  # Default method for multiple-choice evaluation
 MC_STR = "Please provide only the correct answer in its simplest form, without any additional text or explanation."  # "Please provide the letter of the correct answer as your only answer. Do not provide any other text or explanation."
 # Likelihood need not use the extra string, but substring matching needs it else we get non-letters like 'Based'.
-if DEFAULT_MC_METHOD == 'likelihood':
-    MC_STR = None
+# if DEFAULT_MC_METHOD == 'likelihood':
+#     MC_STR = None
+# When using 'both', we keep the MC_STR to ensure substring matching works properly
 # MC_STR = "Please end your answer with 'The correct answer is (letter)'."
 
 class OutputType(Enum):

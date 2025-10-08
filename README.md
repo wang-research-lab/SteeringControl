@@ -77,15 +77,18 @@ python scripts/run/run_full_pipeline.py -m qwen25-7b -c explicit_bias -M dim_con
 ```
 
 ### Parallel Execution
-For comprehensive evaluation across multiple models, behaviors, and methods:
+For comprehensive evaluation across multiple models, behaviors, and methods (run on any subset of these):
 
 ```bash
 python scripts/run/run_parallel_experiments.py \
     --skip-metrics \
     --concepts explicit_bias implicit_bias hallucination_extrinsic refusal_base hallucination_intrinsic \
-    --model llama3-1-8b qwen25-7b \
-    --methods dim dim_nokl dim_conditional \
-    --gpu 0 1 2 3
+    --model llama3-1-8b qwen25-7b gemma2-2b \
+    --methods dim ace caa pca lat dim_nokl ace_nokl caa_nokl pca_nokl lat_nokl dim_conditional ace_conditional caa_conditional pca_conditional lat_conditional \
+    --gpu 0 1 2 3 4 5 6
+
+    --skip-ood \
+    --debug \
 ```
 
 This runs experiments across specified concepts and models in parallel using multiple GPUs. Adjust the concept, model, and method lists as needed, as well as the GPU IDs based on your setup with CUDA_VISIBLE_DEVICES.
@@ -141,6 +144,24 @@ We evaluate on **17 datasets** across primary and secondary behaviors. See our [
 - **Reasoning**: Expert-level (GPQA), Commonsense (ARC-C)
 - **Epistemic**: Factual Misconceptions (TruthfulQA), Sneaking
 - **Normative**: Commonsense Morality, Political Views
+
+### Multiple Choice Evaluation
+
+For multiple-choice datasets, we support both **substring matching** and **likelihood-based** evaluation:
+
+- **Default**: Both methods run simultaneously (`mc_evaluation_method: "both"`)
+- **Substring**: Pattern matching in model output (to view entanglement's effects on instruction-following)
+- **Likelihood**: Compare log probabilities of answer tokens (to view how behavior shifts internally)
+
+When both methods run, individual results are saved as `"Accuracy (substring)"` and `"Accuracy (likelihood)"` in `metrics.yaml`. The `avg_metric` field uses substring by default (configurable via `preferred_avg_metric: "substring"` or `"likelihood"` in the `inference` section of concept config files):
+
+```yaml
+# configs/concepts/my_concept.yaml or configs/secondary_concepts/my_concept.yaml
+inference:
+  preferred_avg_metric: "likelihood"  # or "substring" (default)
+  max_new_tokens: 100
+  temperature: 0.0
+```
 
 ## 🔧 Modular Framework
 
