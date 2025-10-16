@@ -1,0 +1,8 @@
+extends: ../test/base_experiment.yaml
+
+model:
+  class: utils.supported_llms.Qwen25
+  params:
+    model_name: "Qwen/Qwen2.5-7B-Instruct"
+    device_map: "auto"
+    # use_vllm: true

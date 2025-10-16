@@ -1,0 +1,45 @@
+# PCA method configuration only: define generation & selection settings.
+# This YAML should be merged with a model and concept config to run an experiment.
+# This is a more general PCA following AxBench with generation pos of ALL (I think this is shared with CAST too) and only applied at one layer like CAA (as opposed to in CAST where it is cumulative).
+
+direction_generation:
+  generator:
+    class: direction_generation.linear.PCA
+    params: {}
+  param_grid:
+    # Sweep layers from 25% to 80% of total layers, step size 2
+    layer_pct_start: [0.25]
+    layer_pct_end:   [0.8]
+    layer_step:      [2]
+    # No component filtering: None implies default outputs
+    component:       [null]
+    attr:            ['input']
+    # Use token index -1 for generation
+    pos:             [-1]
+
+direction_selection:
+  class: direction_selection.cosmic.CosmicSelector
+  params:
+    # No explicit application locations; uses generation location by default (same as CAA)
+    application_locations: []
+    # Include generation location by default (same as CAA)
+    include_generation_loc: true
+    generation_pos: ALL
+    # Like grid search, iterates over a range of steering factors
+    factors: [-3.0, -2.0, -1.0, 1.0, 2.0, 3.0]
+    # Additional params required by COSMIC (same signature as GridSearchSelector)
+    result_path: "pca_cosmic_results.csv"
+    # COSMIC-specific parameters
+    layer_selection_pct: 0.1  # 10% of layers with lowest cosine similarity
+    kl_threshold: 0.1         # KL divergence threshold for filtering directions
+    # Specify different appliers for positive and negative interventions
+    positive_applier:
+      class: direction_application.unconditional.ActAdd
+      params: {}
+    negative_applier:
+      class: direction_application.unconditional.DirectionalAblation  
+      params: {}
+
+direction_application:
+  class: direction_application.unconditional.ActAdd
+  params: {}

@@ -1,0 +1,57 @@
+# ACE method configuration only: define generation & selection settings.
+# This YAML should be merged with a model and concept config to run an experiment.
+
+# First, override the dataset formatting to use CAA templates:
+train_data:
+  pos:
+    params:
+      format: SteeringFormat.ARDITI
+  neg:
+    params:
+      format: SteeringFormat.ARDITI
+  neutral: null
+
+direction_generation:
+  generator:
+    class: direction_generation.linear.DiffInMeans
+    params: {}
+  param_grid:
+    # Sweep layers from 25% to 80% of total layers, step size 2
+    layer_pct_start: [0.25]
+    layer_pct_end:   [0.8]
+    layer_step:      [2]
+    component:       [null]
+    attr:            ['input']
+    pos:             [-1]
+    # The direction should be unit norm'd. Note this is default. We don't yet have a toggle for on vs. off.
+    # get_unit_norm: true
+
+direction_selection:
+  class: direction_selection.grid_search.GridSearchSelector
+  params:
+    application_locations: []
+    include_generation_loc: true
+    generation_pos: ALL
+    factors: null
+    # KL divergence filtering
+    use_kl_divergence_check: false
+    # kl_threshold: 0.1
+
+direction_application:
+  class: direction_application.unconditional.DirectionalAblation
+  params:
+    use_affine: true  # Enable affine transformation for ACE, i.e., adding back a projection of the reference activations.
+
+# Conditional steering configuration
+conditional:
+  enabled: true
+  condition_selection:
+    class: direction_selection.grid_search.ConditionalGridSearchSelector
+    params:
+      # condition_thresholds: [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+      condition_thresholds: "auto"  # Automatically create thresholds based on min/max of similarity data.
+      condition_comparators: ["greater", "less"]
+      condition_threshold_comparison_mode: "last"
+      result_path: "conditional_grid_search_results.csv"
+  # Use same directions as behavior for condition (behavior vector == steering vector)
+  use_behavior_directions_for_condition: true

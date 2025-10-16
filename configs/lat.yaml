@@ -1,0 +1,49 @@
+# LAT method configuration only: define generation & selection settings.
+# Based on AxBench & RepE.
+# This YAML should be merged with a model and concept config to run an experiment.
+
+# First, override the dataset formatting to use RepE templates:
+train_data:
+  pos:
+    params:
+      format: SteeringFormat.REPE
+  neg:
+    params:
+      format: SteeringFormat.REPE
+  neutral: null
+
+direction_generation:
+  generator:
+    class: direction_generation.linear.LAT
+    params: {}
+  param_grid:
+    # Sweep layers from 25% to 80% of total layers, step size 2
+    layer_pct_start: [0.25]
+    layer_pct_end:   [0.8]
+    layer_step:      [2]
+    # No component filtering: None implies default outputs
+    component:       [null]
+    attr:            ['input']
+    # Use token index -1 for generation
+    pos:             [-1]
+
+direction_selection:
+  class: direction_selection.grid_search.GridSearchSelector
+  params:
+    # No explicit application locations; uses generation location by default
+    application_locations: []
+    include_generation_loc: true
+    # Apply steering cumulatively across all layers starting at layer_pct_start up to the target layer
+    # Based on the examples within RepE repo intervening on a select number of layers, each with the corresponding layer's direction.
+    # E.g., https://github.com/andyzoujm/representation-engineering/blob/5455d8a375d5fb1cb191f9ebcd089b7c21e9a31e/examples/honesty/honesty.ipynb#L428
+    cumulative_layers: true
+    generation_pos: ALL  # based on RepE's rep control reading vector default settings (https://github.com/andyzoujm/representation-engineering/blob/main/repe/rep_control_reading_vec.py)
+    # Steering strength multipliers to sweep
+    factors: [-3.0, -2.0, -1.0, 1.0, 2.0, 3.0]
+    # KL divergence filtering
+    use_kl_divergence_check: true
+    kl_threshold: 0.1
+
+direction_application:
+  class: direction_application.unconditional.ActAdd
+  params: {}

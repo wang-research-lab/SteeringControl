@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["direction_selection", "direction_generation", "direction_application", "utils", "data"]
+
+[project]
+name = "steering-control"
+version = "0.1.0"
+description = "A modular framework for LLM steering intervention evaluation"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+  {name="Steering Control Authors"}
+]
+license = {text="MIT"}
+dependencies = [
+  "torch==2.6.0",
+  "transformers==4.51.3",
+  "datasets==3.4.1",
+  "numpy==2.2.4",
+  "pandas==2.2.3",
+  "scikit-learn==1.6.1",
+  "tqdm==4.67.1",
+  "PyYAML==6.0.2",
+  "jaxtyping==0.3.2",
+  "openai==1.76.0",
+  "groq==0.31.0",
+  "matplotlib==3.10.5",
+  "seaborn",
+  "pytest==8.4.1",
+  "accelerate==1.5.2",
+  "together==1.5.25",
+  "diskcache==5.6.3",
+  "python-dotenv==1.1.0",
+  "llama_api_client==0.1.0",
+  "einops==0.8.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/wang-research-lab/SteeringSafety"
